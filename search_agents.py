@@ -352,25 +352,30 @@ class CornersProblem(search.SearchProblem):
         # for example:
         #     self.debugging = True
         #     self.total_iterations = 0
-
         "*** YOUR CODE HERE ***"
+        self.corner_to_bit = {self.corners[i]: i for i in range(4)}
+
+
 
     def get_start_state(self):
         """
         Returns the start state (in your state space, not the full Pacman state space)
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        pos = self.starting_position
+        visited = 0
+        if pos in self.corner_to_bit:
+            visited |= (1 << self.corner_to_bit[pos])
+        return (pos, visited)        
 
     def is_goal_state(self, state):
-        """
-        Returns whether this search state is a goal state of the problem.
-        """
-        "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        _, visited = state
+        return visited == 15  # 0b1111 (all 4 corners visited)
 
     def is_wall(self, state):
-        utils.raise_not_defined()
+        pos, _ = state
+        x, y = pos
+        return True if self.walls[x][y] else False
 
 
     def get_successors(self, state):
@@ -379,9 +384,22 @@ class CornersProblem(search.SearchProblem):
         N = self.walls.height
 
         "*** YOUR CODE HERE ***"
-        utils.raise_not_defined()
 
+        for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
+            dx, dy = Actions.direction_to_vector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
 
+            if 0 <= nextx < M and 0 <= nexty < N:
+                next_pos = (nextx, nexty)
+
+                next_visited = visited
+                if next_pos in self.corner_to_bit:
+                    next_visited |= (1 << self.corner_to_bit[next_pos])
+
+                # Cost rule for HW3: wall step costs 2, non-wall costs 1
+                step_cost = 2 if self.walls[nextx][nexty] else 1
+
+                successors.append((((next_pos, next_visited)), action, step_cost))
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
@@ -422,7 +440,27 @@ def corners_heuristic(state, problem):
     walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    util.raise_not_defined()
+    remaining = []
+    for i, c in enumerate(corners):
+        if not (visited & (1 << i)):
+            remaining.append(c)
+
+    if not remaining:
+        return 0
+
+    # Greedy MST-like lower bound using Manhattan distances
+    total = 0
+    curr = pos
+    rem = remaining[:]
+
+    while rem:
+        d, best = min(((abs(curr[0] - cx) + abs(curr[1] - cy)), (cx, cy)) for (cx, cy) in rem)
+        total += d
+        curr = best
+        rem.remove(best)
+
+    # Since real cost is >= number of steps and wall steps cost 2, this stays a lower bound.
+    return total
 
 
 class AStarCornersAgent(SearchAgent):
@@ -537,8 +575,13 @@ def food_heuristic(state, problem):
     problem.heuristic_info['wall_count']
     """
     "*** YOUR CODE HERE ***"
-    util.raise_not_defined()
-    return 0
+    position, foodGrid = state
+    food_list = foodGrid.as_list()
+    if not food_list:
+        return 0
+
+    x, y = position
+    return max(abs(x - fx) + abs(y - fy) for (fx, fy) in food_list)
 
 
 class ClosestDotSearchAgent(SearchAgent):
@@ -576,8 +619,8 @@ class ClosestDotSearchAgent(SearchAgent):
         walls = game_state.get_walls()
         problem = AnyFoodSearchProblem(game_state)
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
-
+        problem = AnyFoodSearchProblem(game_state)
+        return search.breadth_first_search(problem)
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
