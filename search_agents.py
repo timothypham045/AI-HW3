@@ -384,6 +384,8 @@ class CornersProblem(search.SearchProblem):
         N = self.walls.height
 
         "*** YOUR CODE HERE ***"
+        pos, visited = state
+        x, y = pos
 
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
             dx, dy = Actions.direction_to_vector(action)
@@ -440,6 +442,7 @@ def corners_heuristic(state, problem):
     walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
+    pos, visited = state
     remaining = []
     for i, c in enumerate(corners):
         if not (visited & (1 << i)):
@@ -507,6 +510,10 @@ class FoodSearchProblem(object):
         self._expanded += 1  # NOTE: STUFF WILL BREAK IF YOU CHANGE THIS
         M = self.walls.width
         N = self.walls.height
+
+        pos, visited = state
+        x, y = pos
+        
         for direction in [
             Directions.NORTH,
             Directions.SOUTH,

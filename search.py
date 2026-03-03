@@ -211,7 +211,9 @@ def null_heuristic(state, problem=None):
 def your_heuristic(state, problem=None):
     """ Your Custom Heuristic """
     "*** YOUR CODE HERE ***"
-    return 0
+    x1, y1 = state
+    x2, y2 = problem.goal
+    return abs(x1 - x2) + abs(y1 - y2)
 
 def a_star_search(problem, heuristic=null_heuristic, initial_hit = 0, return_hit = False):
     """Search the node that has the lowest combined cost and heuristic first."""
